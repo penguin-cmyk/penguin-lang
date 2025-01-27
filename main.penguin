@@ -1,3 +1,0 @@
-print->"Hello, world!";
-error->"Bye World";
-warn->"Test";
