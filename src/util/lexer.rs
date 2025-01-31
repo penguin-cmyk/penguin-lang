@@ -3,8 +3,12 @@ pub struct Lexer {
     position: usize,
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,PartialEq)]
 pub enum Token {
+    TypeNumber,
+    TypeString,
+    TypeBoolean,
+
     StringLiteral(String),
     Identifier(String),
     Comment(String),
@@ -13,8 +17,14 @@ pub enum Token {
     FileSystem,
     VariableDec,
     Number(f64),
+    Boolean(bool),
+    Panic,
+    Comma,
     Semicolon,
+    LCurlyBrace,
+    RCurlyBrace,
     LBracket,
+    QuestionMark,
     RBracket,
     NotEqual,
     Divide,
@@ -24,7 +34,7 @@ pub enum Token {
     Equals,
     Colon,
     Arrow,
-    Minus,    
+    Minus,
     Print,
     Plus,
     Mult,
@@ -32,6 +42,7 @@ pub enum Token {
     Not,
     Dot,
     Std,
+    Eof,
     Use,
     If,
 }
@@ -84,7 +95,6 @@ impl Lexer {
                         self.position += 1;
                     }
                     let identifier: String = self.input[start..self.position].iter().collect();
-
                     match identifier.as_str() {
                         "let" => tokens.push(Token::VariableDec),
                         "fs" => tokens.push(Token::FileSystem),
@@ -92,8 +102,14 @@ impl Lexer {
                         "if" => tokens.push(Token::If), 
                         "use" => tokens.push(Token::Use),
                         "print" => tokens.push(Token::Print),
+                        "panic" => tokens.push(Token::Panic),
                         "elseif" => tokens.push(Token::Elseif),
                         "else" => tokens.push(Token::Else),
+                        "number" => tokens.push(Token::TypeNumber),
+                        "bool" => tokens.push(Token::TypeBoolean),
+                        "string" => tokens.push(Token::TypeString),
+                        "true" => tokens.push(Token::Boolean(true)),
+                        "false" => tokens.push(Token::Boolean(false)),
                         _ =>  tokens.push(Token::Identifier(identifier)),
                     };
                 }
@@ -130,13 +146,17 @@ impl Lexer {
                 }
 
                 ';' => self.push(Token::Semicolon, &mut tokens),
-                '{' => self.push(Token::LBracket, &mut tokens),
-                '}' => self.push(Token::RBracket, &mut tokens),
+                '[' => self.push(Token::LBracket,&mut tokens),
+                ']' => self.push(Token::RBracket, &mut tokens),
+                '{' => self.push(Token::LCurlyBrace,&mut tokens),
+                '}' => self.push(Token::RCurlyBrace, &mut tokens),
                 '(' => self.push(Token::LBrace, &mut tokens),
                 ')' => self.push(Token::RBrace, &mut tokens),
                 '+' => self.push(Token::Plus, &mut tokens),
                 '*' => self.push(Token::Mult, &mut tokens),
                 '.' => self.push(Token::Dot, &mut tokens),
+                '?' => self.push(Token::QuestionMark,&mut tokens),
+                ',' => self.push(Token::Comma,&mut tokens),
 
                 '~' => self.predict(Some('='), Token::NotEqual,Token::Not,&mut tokens),
                 ':' => self.predict(Some(':'), Token::DoubleColon, Token::Colon, &mut tokens),
@@ -147,7 +167,7 @@ impl Lexer {
                 _ => panic!("Unexpected character: {character}"),
             }
         }
-
+        tokens.push(Token::Eof);
         tokens 
     }
 
